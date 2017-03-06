@@ -6,6 +6,7 @@ module Facebook
     # The Bot module sends and receives messages.
     module Bot
       include HTTParty
+      read_timeout 1800
 
       base_uri 'https://graph.facebook.com/v2.6/me'
 

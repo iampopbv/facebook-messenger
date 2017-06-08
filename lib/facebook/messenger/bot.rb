@@ -10,7 +10,7 @@ module Facebook
 
       base_uri 'https://graph.facebook.com/v2.6/me'
 
-      EVENTS = %i[
+      EVENTS = %i(
         message
         delivery
         postback
@@ -19,7 +19,7 @@ module Facebook
         account_linking
         referral
         message_echo
-      ].freeze
+      ).freeze
 
       class << self
         # Deliver a message with the given payload.
@@ -32,6 +32,26 @@ module Facebook
         # or raises an exception if it was not.
         def deliver(message, access_token:)
           response = post '/messages',
+                          body: JSON.dump(message),
+                          format: :json,
+                          query: {
+                            access_token: access_token
+                          }
+
+          Facebook::Messenger::Bot::ErrorParser.raise_errors_from(response)
+
+          response.body
+        end
+
+        # Upload a file for later reuse using the Attachment Upload API.
+        #
+        # message - A Hash containing the file url*.
+        # * https://developers.facebook.com/docs/messenger-platform/send-api-reference/attachment-upload#request
+        #
+        # Returns the response containing the attachment id if the upload was
+        # successful, or raises an exception if it was not.
+        def upload(message, access_token:)
+          response = post '/message_attachments',
                           body: JSON.dump(message),
                           format: :json,
                           query: {

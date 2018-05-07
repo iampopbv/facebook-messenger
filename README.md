@@ -8,7 +8,6 @@
 [![Dependency Status](https://img.shields.io/gemnasium/hyperoslo/facebook-messenger.svg?style=flat)](https://gemnasium.com/hyperoslo/facebook-messenger)
 [![Code Climate](https://img.shields.io/codeclimate/github/hyperoslo/facebook-messenger.svg?style=flat)](https://codeclimate.com/github/hyperoslo/facebook-messenger)
 [![Coverage Status](https://img.shields.io/coveralls/hyperoslo/facebook-messenger.svg?style=flat)](https://coveralls.io/r/hyperoslo/facebook-messenger)
-[![Join the chat at https://gitter.im/hyperoslo/facebook-messenger](https://badges.gitter.im/hyperoslo/facebook-messenger.svg)](https://gitter.im/hyperoslo/facebook-messenger?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Installation
 
@@ -47,7 +46,8 @@ Bot.deliver({
   },
   message: {
     text: 'Human?'
-  }
+  },
+  message_type: Facebook::Messenger::Bot::MessageType::UPDATE
 }, access_token: ENV['ACCESS_TOKEN'])
 ```
 
@@ -171,10 +171,21 @@ Bot.on :message_echo do |message_echo|
   message_echo.text        # => 'Hello, bot!'
   message_echo.attachments # => [ { 'type' => 'image', 'payload' => { 'url' => 'https://www.example.com/1.jpg' } } ]
 
-  # Log or store in your storage method of choice.
+  # Log or store in your storage method of choice (skynet, obviously)
 end
 ```
 
+##### Record accepted message requests
+
+You can keep track of message requests accepted by the human:
+
+```ruby
+Bot.on :message_request do |message_request|
+  message_request.accept? # => true
+
+  # Log or store in your storage method of choice (skynet, obviously)
+end
+```
 
 #### Send to Facebook
 
@@ -266,7 +277,7 @@ Facebook::Messenger::Profile.set({
           type: 'nested',
           call_to_actions: [
             {
-              title: 'What's a chatbot?',
+              title: 'What is a chatbot?',
               type: 'postback',
               payload: 'EXTERMINATE'
             },
@@ -298,6 +309,19 @@ Facebook::Messenger::Profile.set({
 }, access_token: ENV['ACCESS_TOKEN'])
 ```
 
+
+#### Handle a Facebook Policy Violation
+
+See Facebook's documentation on [Messaging Policy Enforcement](https://developers.facebook.com/docs/messenger-platform/reference/webhook-events/messaging_policy_enforcement)
+
+```
+Bot.on :'policy_enforcement' do |referral|
+  referral.action # => 'block'
+  referral.reason # => "The bot violated our Platform Policies (https://developers.facebook.com/policy/#messengerplatform). Common violations include sending out excessive spammy messages or being non-functional."
+end
+```
+
+
 ## Configuration
 
 ### Create an Application on Facebook
@@ -324,16 +348,36 @@ to keep track of access tokens, app secrets and verify tokens for each of them:
 
 ```ruby
 class ExampleProvider < Facebook::Messenger::Configuration::Providers::Base
+  # Verify that the given verify token is valid.
+  #
+  # verify_token - A String describing the application's verify token.
+  #
+  # Returns a Boolean representing whether the verify token is valid.
   def valid_verify_token?(verify_token)
     bot.exists?(verify_token: verify_token)
   end
 
+  # Find the right application secret.
+  #
+  # page_id - An Integer describing a Facebook Page ID.
+  #
+  # Returns a String describing the application secret.
   def app_secret_for(page_id)
     bot.find_by(page_id: page_id).app_secret
   end
 
-  def access_token_for(page_id)
-    bot.find_by(page_id: page_id).access_token
+  # Find the right access token.
+  #
+  # recipient - A Hash describing the `recipient` attribute of the message coming
+  #             from Facebook.
+  #
+  # Note: The naming of "recipient" can throw you off, but think of it from the
+  # perspective of the message: The "recipient" is the page that receives the
+  # message.
+  #
+  # Returns a String describing an access token.
+  def access_token_for(recipient)
+    bot.find_by(page_id: recipient['id']).access_token
   end
 
   private
@@ -375,6 +419,8 @@ require 'facebook/messenger'
 require_relative 'bot'
 
 run Facebook::Messenger::Server
+
+# or Facebook::Messenger::ServerNoError for dev
 ```
 
 ```
@@ -467,11 +513,16 @@ support bots with, well, Facebook Messenger.
 
 * [Botamp](https://botamp.com) is the all-in-one solution for Marketing Automation via messaging apps.
 
-## Hyper loves you
+## I love you
 
-[Hyper] made this. We're a bunch of folks who love building things. You should
-[tweet us] if you can't get it to work. In fact, you should tweet us anyway.
-If you're using Facebook Messenger, we probably want to [hire you].
+Johannes Gorset made this. You should [tweet me](http://twitter.com/jgorset) if you can't get it
+to work. In fact, you should tweet me anyway.
+
+## I love Schibsted
+
+I work at [Schibsted Products & Technology](https://github.com/schibsted) with a bunch of awesome folks
+who are every bit as passionate about building things as I am. If you're using Facebook Messenger,
+you should probably join us.
 
 [Hyper]: https://github.com/hyperoslo
 [tweet us]: http://twitter.com/hyperoslo

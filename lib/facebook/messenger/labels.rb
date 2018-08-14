@@ -69,13 +69,8 @@ module Facebook
       # @return [String] If the label is successfully deleted, returns true.
       #
       def list_labels(access_token:)
-        response = get '/me/custom_labels?fields=name', query: {
-          access_token: access_token
-        }
-
-        raise_errors(response)
-
-        response.body
+        get_paged_data url: '/me/custom_labels?fields=name',
+                       access_token: access_token
       end
 
       #
@@ -135,13 +130,8 @@ module Facebook
       # @return [Boolean] If the user is successfully untagged, returns true.
       #
       def list_user_labels(user_psid, access_token:)
-        response = get "/#{user_psid}/custom_labels?fields=name", query: {
-          access_token: access_token
-        }
-
-        raise_errors(response)
-
-        response.body
+        get_paged_data url: "/#{user_psid}/custom_labels?fields=name",
+                       access_token: access_token
       end
 
       #
@@ -167,6 +157,32 @@ module Facebook
             'Content-Type' => 'application/json'
           }
         )
+      end
+
+      #
+      # Performs a GET request for a paged endpoint, following any pagination if
+      # present, returning a list with all the results.
+      #
+      def get_paged_data(url:, access_token:, current_data: [])
+        response = get url, query: { access_token: access_token }
+
+        raise_errors(response)
+
+        parsed_response = JSON.parse(response.body)
+
+        current_data += parsed_response['data']
+
+        next_page_url = parsed_response['paging']['next']
+        if next_page_url.present?
+          # Remove base uri from the returned url
+          next_page_url.gsub!(base_uri, '')
+
+          return get_paged_data url: next_page_url,
+                                access_token: access_token,
+                                current_data: current_data
+        end
+
+        current_data
       end
 
       #

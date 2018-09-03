@@ -172,7 +172,7 @@ module Facebook
 
         current_data += parsed_response['data']
 
-        next_page_url = parsed_response['paging']['next']
+        next_page_url = parsed_response.try(:[], 'paging').try(:[], 'next')
         if next_page_url.present?
           # Remove base uri from the returned url
           next_page_url.gsub!(base_uri, '')

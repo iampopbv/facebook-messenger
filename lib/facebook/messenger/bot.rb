@@ -55,6 +55,19 @@ module Facebook
           response.body
         end
 
+        def broadcast(message, access_token:)
+          response = post '/messages',
+                          body: JSON.dump(message),
+                          format: :json,
+                          query: {
+                            access_token: access_token
+                          }
+
+          Facebook::Messenger::Bot::ErrorParser.raise_errors_from(response)
+
+          response.body
+        end
+
         # Upload a file for later reuse using the Attachment Upload API.
         #
         # message - A Hash containing the file url*.

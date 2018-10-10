@@ -56,7 +56,7 @@ module Facebook
         end
 
         def broadcast(message, access_token:)
-          response = post '/messages',
+          response = post '/broadcast_messages',
                           body: JSON.dump(message),
                           format: :json,
                           query: {

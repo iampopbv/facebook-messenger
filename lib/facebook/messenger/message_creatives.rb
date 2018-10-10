@@ -24,38 +24,19 @@ module Facebook
       # @param [String] access_token Access token of page to which bot has
       #   to subscribe.
       #
-      # @return [Boolean] TRUE
+      # @return [String] MessageCreative ID
       #
-      def subscribe(access_token:)
-        response = post '/message_creatives', query: {
-          access_token: access_token
-        }
+      def create_message_creative(message, access_token:)
+        response = post '/message_creatives',
+                        body: JSON.dump(message),
+                        format: :json,
+                        query: {
+                          access_token: access_token
+                        }
 
-        raise_errors(response)
+        Facebook::Messenger::Bot::ErrorParser.raise_errors_from(response)
 
-        true
-      end
-
-      #
-      # Function unsubscribe the app from facebook page.
-      # @see https://developers.facebook.com/docs/graph-api/reference/page/subscribed_apps
-      #
-      # @raise [Facebook::Messenger::Subscriptions::Error] if there is any error
-      #   in the response of subscribed_apps request.
-      #
-      # @param [String] access_token Access token of page from which app has
-      #   to unsubscribe.
-      #
-      # @return [Boolean] TRUE
-      #
-      def unsubscribe(access_token:)
-        response = delete '/subscribed_apps', query: {
-          access_token: access_token
-        }
-
-        raise_errors(response)
-
-        true
+        response.body
       end
 
       #
@@ -73,7 +54,7 @@ module Facebook
       end
 
       #
-      # Class Error provides errors related to subscriptions.
+      # Class Error provides errors related to message creatives.
       #
       class Error < Facebook::Messenger::FacebookError; end
     end

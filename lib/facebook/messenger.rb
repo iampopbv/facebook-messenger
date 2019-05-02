@@ -8,6 +8,7 @@ require 'facebook/messenger/server'
 require 'facebook/messenger/server_no_error'
 require 'facebook/messenger/configuration'
 require 'facebook/messenger/incoming'
+require 'facebook/messenger/personas'
 
 module Facebook
   # All the code for this gem resides in this module.

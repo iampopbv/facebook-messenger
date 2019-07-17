@@ -4,9 +4,10 @@
 
 
 [![Gem Version](https://img.shields.io/gem/v/facebook-messenger.svg?style=flat)](https://rubygems.org/gems/facebook-messenger)
-[![Build Status](https://img.shields.io/travis/hyperoslo/facebook-messenger.svg?style=flat)](https://travis-ci.org/jgorset/facebook-messenger)
-[![Code Climate](https://img.shields.io/codeclimate/github/hyperoslo/facebook-messenger.svg?style=flat)](https://codeclimate.com/github/jgorset/facebook-messenger)
-[![Coverage Status](https://img.shields.io/coveralls/hyperoslo/facebook-messenger.svg?style=flat)](https://coveralls.io/r/jgorset/facebook-messenger)
+[![Gem Downloads](https://img.shields.io/gem/dt/facebook-messenger.svg)](https://rubygems.org/gems/facebook-messenger)
+[![Build Status](https://img.shields.io/travis/jgorset/facebook-messenger.svg?style=flat)](https://travis-ci.org/jgorset/facebook-messenger)
+[![Code Climate](https://img.shields.io/codeclimate/maintainability/jgorset/facebook-messenger.svg)](https://codeclimate.com/github/jgorset/facebook-messenger)
+[![Coverage Status](https://coveralls.io/repos/github/jgorset/facebook-messenger/badge.svg?branch=master)](https://coveralls.io/github/jgorset/facebook-messenger?branch=master)
 [![Documentation Coverage](http://inch-ci.org/github/jgorset/facebook-messenger.svg?branch=master)](http://inch-ci.org/github/jgorset/facebook-messenger)
 
 ## Installation
@@ -48,8 +49,20 @@ Bot.deliver({
     text: 'Human?'
   },
   message_type: Facebook::Messenger::Bot::MessagingType::UPDATE
-}, access_token: ENV['ACCESS_TOKEN'])
+}, access_token: ENV['ACCESS_TOKEN'], app_secret_proof: app_secret_proof
+)
 ```
+
+NOTE: `app_secret_proof` is an optional parameter to [secure your requests](https://developers.facebook.com/docs/graph-api/securing-requests/),
+and you can generate it from your configuration provider like so:
+
+```ruby
+configuration_provider = Facebook::Messenger::Configuration::Providers.Environment.new
+app_secret_proof = configuration_provider.app_secret_proof_for(page_id)
+```
+
+For the methods you'll usually use (like `reply` and `typing_on`), the app secret proof will be set and sent
+automatically if you set the environment variable `APP_SECRET_PROOF_ENABLED` to `true`.
 
 ##### Messages with images
 
@@ -187,6 +200,23 @@ Bot.on :message_request do |message_request|
 end
 ```
 
+##### Record instant game progress
+
+You can keep track of instant game progress:
+
+```ruby
+Bot.on :game_play do |game_play|
+  game_play.sender    # => { 'id' => '1008372609250235' }
+  game_play.recipient # => { 'id' => '2015573629214912' }
+  game_play.sent_at   # => 2016-04-22 21:30:36 +0200
+  game_play.game      # => "<GAME-APP-ID>"
+  game_play.player    # => "<PLAYER-ID>"
+  game_play.context   # => { 'context_type' => "<CONTEXT-TYPE:SOLO|THREAD>", 'context_id' => "<CONTEXT-ID>" }
+  game_play.score     # => 100
+  game_play.payload   # => "<PAYLOAD>"
+end
+```
+
 #### Send to Facebook
 
 When the human clicks the [Send to Messenger button][send-to-messenger-plugin]
@@ -230,6 +260,17 @@ Bot.on :referral do |referral|
   referral.recipient # => { 'id' => '2015573629214912' }
   referral.sent_at   # => 2016-04-22 21:30:36 +0200
   referral.ref       # => 'MYPARAM'
+end
+```
+
+#### Pass thread control
+
+Another bot can pass a human to you:
+
+```ruby
+Bot.on :pass_thread_control do |pass_thread_control|
+  pass_thread_control.new_owner_app_id # => '123456789'
+  pass_thread_control.metadata # => 'Additional content that the caller wants to set'
 end
 ```
 
@@ -432,7 +473,10 @@ Once you've configured your bot, subscribe it to the Page to get messages
 from Facebook:
 
 ```ruby
-Facebook::Messenger::Subscriptions.subscribe(access_token: access_token)
+Facebook::Messenger::Subscriptions.subscribe(
+  access_token: access_token,
+  subscribed_fields: %w[feed mention name]
+)
 ```
 
 You only need to subscribe your page once. As long as your bot works and
@@ -536,7 +580,10 @@ require 'facebook/messenger'
 include Facebook::Messenger
 
 class Listener
-  Facebook::Messenger::Subscriptions.subscribe(access_token: ENV["FB_ACCESS_TOKEN"])
+  Facebook::Messenger::Subscriptions.subscribe(
+    access_token: ENV["FB_ACCESS_TOKEN"],
+    subscribed_fields: %w[feed mention name]
+  )
 
   Bot.on :message do |message|
     Bot.deliver({

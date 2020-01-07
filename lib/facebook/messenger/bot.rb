@@ -19,6 +19,7 @@ module Facebook
       # @return [Array] Array containing the supported webhook events.
       EVENTS = %i[
         message
+        reaction
         delivery
         postback
         optin

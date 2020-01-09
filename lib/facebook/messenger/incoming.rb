@@ -53,6 +53,10 @@ module Facebook
       def self.parse(payload)
         return MessageEcho.new(payload) if payload_is_echo?(payload)
 
+        p "Payload"
+        p payload
+        p "-------"
+
         EVENTS.each do |event, klass|
           return klass.new(payload) if payload.key?(event)
         end

@@ -1,6 +1,7 @@
 require 'facebook/messenger/incoming/common'
 require 'facebook/messenger/incoming/message'
 require 'facebook/messenger/incoming/message_echo'
+require 'facebook/messenger/incoming/message_reaction'
 require 'facebook/messenger/incoming/message_request'
 require 'facebook/messenger/incoming/delivery'
 require 'facebook/messenger/incoming/postback'
@@ -24,6 +25,7 @@ module Facebook
       #   handler classes.
       EVENTS = {
         'message' => Message,
+        'reaction' => MessageReaction,
         'delivery' => Delivery,
         'postback' => Postback,
         'optin' => Optin,

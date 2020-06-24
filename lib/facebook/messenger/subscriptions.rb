@@ -9,7 +9,7 @@ module Facebook
     module Subscriptions
       include HTTParty
 
-      base_uri 'https://graph.facebook.com/v3.2/me'
+      base_uri 'https://graph.facebook.com/v3.2'
 
       format :json
 
@@ -28,7 +28,7 @@ module Facebook
       # @return [Boolean] TRUE
       #
       def subscribe(access_token:, subscribed_fields: [])
-        response = post '/subscribed_apps',
+        response = post '/me/subscribed_apps',
                         headers: { 'Content-Type' => 'application/json' },
                         body: {
                           access_token: access_token,
@@ -40,20 +40,19 @@ module Facebook
         true
       end
 
-      #
+      # You can dissociate an Application from a Page by making a DELETE request to /{page_id}/subscribed_apps.
       # Function unsubscribe the app from facebook page.
       # @see https://developers.facebook.com/docs/graph-api/reference/page/subscribed_apps
       #
       # @raise [Facebook::Messenger::Subscriptions::Error] if there is any error
       #   in the response of subscribed_apps request.
       #
-      # @param [String] access_token Access token of page from which app has
-      #   to unsubscribe.
-      #
+      # @param [String] access_token pop bot app access token
+      # @param [Integer] page_id facebook page id
       # @return [Boolean] TRUE
       #
-      def unsubscribe(access_token:)
-        response = delete '/subscribed_apps', query: {
+      def unsubscribe(page_id:, access_token:)
+        response = delete "/#{page_id}/subscribed_apps", query: {
           access_token: access_token
         }
 

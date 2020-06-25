@@ -74,6 +74,11 @@ describe Facebook::Messenger::Subscriptions do
   end
 
   describe '.unsubscribe' do
+    let(:page_id) { '000_000_000' }
+    let(:subscribed_apps_url) do
+      Facebook::Messenger::Subscriptions.base_uri + "/#{page_id}/subscribed_apps"
+    end
+
     context 'with a successful response' do
       before do
         stub_request(:delete, subscribed_apps_url)
@@ -86,7 +91,7 @@ describe Facebook::Messenger::Subscriptions do
       end
 
       it 'returns true' do
-        expect(subject.unsubscribe(access_token: access_token)).to be true
+        expect(subject.unsubscribe(access_token: access_token, page_id: page_id)).to be true
       end
     end
 
@@ -112,7 +117,7 @@ describe Facebook::Messenger::Subscriptions do
 
       it 'raises an error' do
         expect do
-          subject.unsubscribe(access_token: access_token)
+          subject.unsubscribe(access_token: access_token, page_id: page_id)
         end.to raise_error(
           Facebook::Messenger::Subscriptions::Error, error_message
         )

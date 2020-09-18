@@ -13,7 +13,7 @@ module Facebook
       read_timeout 1800
 
       # Define base_uri for HTTParty.
-      base_uri 'https://graph.facebook.com/v3.2/me'
+      base_uri 'https://graph.facebook.com/v8.0/me'
 
       #
       # @return [Array] Array containing the supported webhook events.
